@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Manager UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Agent Manager UI</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Create Agent</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-agent-form">
+                            <div class="mb-3">
+                                <label for="agent-name" class="form-label">Agent Name (optional)</label>
+                                <input type="text" class="form-control" id="agent-name" placeholder="Leave blank for auto-generated name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="agent-instructions" class="form-label">Instructions / Code</label>
+                                <textarea class="form-control" id="agent-instructions" rows="10" placeholder="Enter instructions for the agent or prepend with 'code:' to provide custom code"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="agent-dependencies" class="form-label">Dependencies (comma-separated)</label>
+                                <input type="text" class="form-control" id="agent-dependencies" placeholder="e.g., pandas,numpy,requests">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Agent</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Active Agents</h3>
+                        <button id="refresh-agents" class="btn btn-sm btn-secondary">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="agents-list" class="list-group">
+                            <div class="text-center p-3">Loading agents...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Run Agent</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="run-agent-form">
+                            <div class="mb-3">
+                                <label for="run-agent-id" class="form-label">Agent ID</label>
+                                <select class="form-control" id="run-agent-id">
+                                    <option value="">Select an agent</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="run-agent-args" class="form-label">Arguments (comma-separated)</label>
+                                <input type="text" class="form-control" id="run-agent-args" placeholder="e.g., arg1,arg2,arg3">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="run-as-subprocess">
+                                <label class="form-check-label" for="run-as-subprocess">
+                                    Run as subprocess
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-success">Run Agent</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3>Results</h3>
+            </div>
+            <div class="card-body">
+                <pre id="results" class="bg-light p-3 rounded">No results yet</pre>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Cleanup Status</h3>
+                <button id="trigger-cleanup" class="btn btn-sm btn-warning">Trigger Cleanup Check</button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Inactive Timeout:</strong> <span id="inactive-timeout">Loading...</span> seconds
+                </div>
+                <div class="mb-3">
+                    <strong>Active Agents Count:</strong> <span id="active-agents-count">Loading...</span>
+                </div>
+                <div class="mb-3">
+                    <button id="show-cleanup-debug" class="btn btn-sm btn-info">Show Debug Info</button>
+                </div>
+                <pre id="cleanup-debug" class="bg-light p-3 rounded" style="display: none;">No debug info yet</pre>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

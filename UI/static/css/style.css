@@ -1,0 +1,49 @@
+/* Custom styles for the Agent Manager UI */
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.agent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.agent-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-created {
+    background-color: #ffc107;
+}
+
+.status-completed {
+    background-color: #28a745;
+}
+
+.status-error {
+    background-color: #dc3545;
+}
+
+.agent-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.agent-time-left {
+    font-size: 0.8em;
+    color: #6c757d;
+} 
