@@ -10,10 +10,15 @@ import atexit
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agent_manager import AgentManager
 from config import DEFAULT_CONFIG
+from active_agents import init_blueprint
 
 app = Flask(__name__)
 # Create a single instance of AgentManager to be used by the application
 agent_manager = AgentManager(config=DEFAULT_CONFIG)
+
+# Register the active agents blueprint
+active_agents_blueprint = init_blueprint(agent_manager)
+app.register_blueprint(active_agents_blueprint)
 
 # Log active agents on startup
 print(f"Initial active agents: {list(agent_manager.active_agents.keys())}")
@@ -30,17 +35,6 @@ def cleanup_on_exit():
     if hasattr(agent_manager, 'cleanup_timer') and agent_manager.cleanup_timer:
         agent_manager.cleanup_timer.cancel()
     agent_manager.cleanup_all_agents()
-
-# Add a new endpoint to trigger cleanup check manually (for debugging)
-@app.route('/api/check-cleanup', methods=['POST'])
-def check_cleanup():
-    """Manually trigger a cleanup check."""
-    agent_manager._cleanup_inactive_agents()
-    return jsonify({
-        'status': 'success',
-        'message': 'Cleanup check triggered',
-        'remaining_agents': list(agent_manager.active_agents.keys())
-    })
 
 @app.route('/')
 def index():
@@ -75,60 +69,6 @@ def create_agent():
         'status': 'success',
         'agent_id': agent_id,
         'message': f'Agent {agent_id} created successfully'
-    })
-
-@app.route('/api/run-agent/<agent_id>', methods=['POST'])
-def run_agent(agent_id):
-    """Run the specified agent."""
-    data = request.json
-    args = data.get('args', [])
-    kwargs = data.get('kwargs', {})
-    
-    try:
-        if data.get('subprocess', False):
-            result = agent_manager.run_agent_subprocess(agent_id, *args)
-            output = {
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'returncode': result.returncode
-            }
-        else:
-            result = agent_manager.run_agent(agent_id, *args, **kwargs)
-            output = result
-            
-        return jsonify({
-            'status': 'success',
-            'result': output,
-            'message': f'Agent {agent_id} executed successfully'
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
-@app.route('/api/agents', methods=['GET'])
-def get_agents():
-    """Get a list of all active agents."""
-    agents = agent_manager.get_active_agents()
-    return jsonify({
-        'status': 'success',
-        'agents': agents
-    })
-
-@app.route('/api/cleanup-agent/<agent_id>', methods=['POST'])
-def cleanup_agent(agent_id):
-    """Clean up a specific agent."""
-    data = request.json
-    delay = data.get('delay', 0)
-    
-    success = agent_manager.cleanup_agent(agent_id, delay_seconds=delay)
-    
-    return jsonify({
-        'status': 'success' if success else 'error',
-        'message': f'Agent {agent_id} cleanup ' + 
-                  ('scheduled' if delay > 0 else 'completed') if success 
-                  else f'Failed to clean up agent {agent_id}'
     })
 
 if __name__ == '__main__':

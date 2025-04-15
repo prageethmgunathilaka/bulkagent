@@ -38,19 +38,27 @@ class AgentManager:
         if 'inactive_timeout' not in self.config:
             self.config['inactive_timeout'] = 300  # Default 5 minutes
         
+        self.logger.info(f"Agent Manager configured with inactive_timeout: {self.config['inactive_timeout']} seconds")
+        
         # Set up the cleanup timer
         self.cleanup_timer = None
         self._start_cleanup_timer()
     
     def _start_cleanup_timer(self):
         """Start a timer to periodically check for inactive agents."""
-        # Check every 10 seconds for inactive agents
-        self.cleanup_timer = threading.Timer(10, self._cleanup_timer_callback)
+        # Check every 2 seconds instead of 10 for inactive agents
+        if self.cleanup_timer and self.cleanup_timer.is_alive():
+            self.logger.warning("Cleanup timer already running, not starting a new one")
+            return
+        
+        self.logger.debug("Starting cleanup timer to check for inactive agents every 2 seconds")
+        self.cleanup_timer = threading.Timer(2, self._cleanup_timer_callback)  # Changed from 10 to 2
         self.cleanup_timer.daemon = True
         self.cleanup_timer.start()
     
     def _cleanup_timer_callback(self):
         """Callback for the cleanup timer."""
+        self.logger.debug("Cleanup timer triggered, checking for inactive agents")
         self._cleanup_inactive_agents()
         # Restart the timer
         self._start_cleanup_timer()
@@ -126,6 +134,11 @@ class AgentManager:
                 self.logger.info(f"Agent {agent_id} completed successfully")
                 # Update last active timestamp
                 self.active_agents[agent_id]["last_active"] = time.time()
+                
+                # Force cleanup check immediately if timeout is 0
+                if self.config['inactive_timeout'] == 0:
+                    self._cleanup_inactive_agents()
+                
                 return result
             else:
                 agent_info["status"] = "error"
@@ -388,12 +401,26 @@ if __name__ == "__main__":
         current_time = time.time()
         agents_to_remove = []
         
+        self.logger.info(f"Checking for inactive agents - timeout setting: {self.config['inactive_timeout']} seconds")
+        
         for agent_id, agent_data in self.active_agents.items():
-            # Make sure we're using the timeout from config, not a hardcoded value
-            if current_time - agent_data['last_active'] > self.config.get('inactive_timeout', 300):
+            # Using the timeout from self.config that was properly initialized in __init__
+            timeout = self.config['inactive_timeout']
+            idle_time = current_time - agent_data['last_active']
+            
+            self.logger.info(f"Agent {agent_id}: status={agent_data['status']}, idle_time={idle_time:.1f}s, timeout={timeout}s")
+            
+            # Special handling for 0-second timeout - clean up any inactive agent immediately
+            if timeout == 0 and agent_data['status'] in ['completed', 'error']:
+                self.logger.info(f"Agent {agent_id} is inactive with 0-second timeout - cleaning up immediately")
                 agents_to_remove.append(agent_id)
-                
+            # Regular timeout-based cleanup
+            elif idle_time > timeout:
+                self.logger.info(f"Agent {agent_id} inactive for {idle_time:.1f}s (timeout: {timeout}s) - cleaning up")
+                agents_to_remove.append(agent_id)
+        
         for agent_id in agents_to_remove:
+            self.logger.info(f"Removing agent {agent_id}")
             self._remove_agent(agent_id)
     
     def _remove_agent(self, agent_id: str) -> bool:
@@ -429,10 +456,11 @@ if __name__ == "__main__":
         
         for agent_id, agent_data in self.active_agents.items():
             idle_time = current_time - agent_data['last_active']
+            timeout = self.config['inactive_timeout']  # Use the same timeout value consistently
             result[agent_id] = {
                 'status': agent_data['status'],
                 'idle_time': idle_time,
-                'time_left': max(0, self.config.get('inactive_timeout', 3000) - idle_time)
+                'time_left': max(0, timeout - idle_time)
             }
         
         return result 

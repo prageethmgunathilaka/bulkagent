@@ -7,7 +7,7 @@ from config import DEFAULT_CONFIG
 
 # Get UI-specific settings with defaults
 UI_CONFIG = {
-    'port': DEFAULT_CONFIG.get('ui_port', 5000),
+    'port': DEFAULT_CONFIG.get('ui_port', 8001),
     'host': DEFAULT_CONFIG.get('ui_host', '0.0.0.0'),
     'debug': DEFAULT_CONFIG.get('ui_debug', True),
 }
