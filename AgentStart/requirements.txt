@@ -1,0 +1,5 @@
+# Core requirements for AgentStart language
+threading
+queue
+sqlite3
+# Add any additional requirements your implementation might need 
